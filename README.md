@@ -35,14 +35,10 @@ mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
 git clone https://github.com/samuelhrqe/roomba_ros2.git
 cd ~/ros2_ws
-rosdep install --from-paths src --rosdistro $ROS_DISTRO --ignore-src -r -y
+rosdep install --from-paths src --rosdistro $ROS_DISTRO --ignore-src --skip-keys=libfreenect -r -y
 colcon build --package-select roomba_ros2
 source install/setup.bash
 ```
-
-> After `rosdep install` command:
->
-> `roomba_ros2: Cannot locate rosdep definition for [libfreenect]` will appear. You can ignore this message.
 
 ## Run
 
