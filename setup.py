@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'kinect_node = kinect_node.kinect:main',
+            'yolo_node = yolo_node.yolo_node:main',
         ],
     },
 )
