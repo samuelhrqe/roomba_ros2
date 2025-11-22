@@ -7,8 +7,15 @@
   <maintainer email="samuelhenriq12@gmail.com">Samuel Henrique</maintainer>
   <license>Apache-2.0</license>
 
-  <depend>libfreenect</depend>
+  <!-- Intel Realsense dependecies -->
   <depend>librealsense2</depend>
+  <depend>realsense2_camera</depend>
+  <depend>realsense2_camera_msgs</depend>
+  <depend>realsense2_description</depend>
+
+  <!-- Kinect library -->
+  <depend>libfreenect</depend>
+  
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>

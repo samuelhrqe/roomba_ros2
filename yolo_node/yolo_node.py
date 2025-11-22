@@ -4,7 +4,6 @@ from sensor_msgs.msg import Image
 from geometry_msgs.msg import PointStamped
 from visualization_msgs.msg import Marker
 from geometry_msgs.msg import TransformStamped
-import numpy as np
 import cv_bridge
 import pyrealsense2 as rs
 
@@ -13,10 +12,11 @@ from ultralytics import YOLO
 import tf2_ros
 import math
 
-
 class YoloNode(Node):
     def __init__(self):
         super().__init__('yolo_node')
+
+        self._stopping = 0
 
         # Initialize YOLO model
         self.model = YOLO('yolo11n.pt')
@@ -40,10 +40,8 @@ class YoloNode(Node):
         self.depth_image = None
         
         # Publishers
-        self.image_pub = self.create_publisher(Image, '/yolo_node/detected_image', 10)
+        self.image_pub = self.create_publisher(Image, '/yolo_node/annoted_image', 10)
         self.marker_pub = self.create_publisher(Marker, '/yolo_node/marker', 10)
-        self.point_pub = self.create_publisher(PointStamped, '/yolo_node/detected_point', 10)
-        self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
 
     def depth_callback(self, msg):
         self.depth_image = self.cv_bridge.imgmsg_to_cv2(msg, msg.encoding)
@@ -58,7 +56,7 @@ class YoloNode(Node):
 
         results = self.model(cv_image, verbose=False)
         if results is None or len(results) == 0:
-            self.get_logger().info("No detections made.")
+            self.get_logger().warning("No detections made.")
             return
         
         height, width, channels = cv_image.shape
@@ -67,7 +65,6 @@ class YoloNode(Node):
         annotaded_image = results[0].plot()
         detected_image_msg = self.cv_bridge.cv2_to_imgmsg(annotaded_image, encoding='rgb8') 
         self.image_pub.publish(detected_image_msg)
-        self.get_logger().info("Published detected image.")
 
         for result in results:
             boxes = result.boxes
@@ -96,15 +93,38 @@ class YoloNode(Node):
                 marker.action = Marker.ADD
                 marker.text = f"Class: [{cls_name}: {cls_id}], Conf: {conf:.2f}"
                 self.marker_pub.publish(marker)
-                self.get_logger().info(f"Published marker for {cls_name} with confidence {conf:.2f}.")
+                # self.get_logger().info(f"Published marker for {cls_name} with confidence {conf:.2f}.")
+
+    def shutdown(self):
+        
+        if self._stopping:
+            return
+        
+        self._stopping = True
+
+        try:
+            self.destroy_subscription(self.rgb_sub)
+            self.destroy_subscription(self.depth_sub)
+            self.destroy_publisher(self.image_pub)
+            self.destroy_publisher(self.marker_pub)
+        except Exception:
+            pass
+
+        print('Shutting down YoloNode...')
 
 
 def main(args=None):
     rclpy.init(args=args)
     yolo_node = YoloNode()
-    rclpy.spin(yolo_node)
-    yolo_node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(yolo_node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        yolo_node.shutdown()
+        yolo_node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
