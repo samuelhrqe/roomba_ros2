@@ -63,6 +63,7 @@ class YoloNode(Node):
         detected_image_msg = self.cv_bridge.cv2_to_imgmsg(annotaded_image, encoding='rgb8')
         detected_image_msg.header = rgb_msg.header  # keep timestamp
         self.image_pub.publish(detected_image_msg)
+        self.get_logger().info("Publish!")
 
         # Matriz intrínseca K da câmera de profundidade
         K = info_msg.k  # [fx, 0, cx, 0, fy, cy, 0, 0, 1]
