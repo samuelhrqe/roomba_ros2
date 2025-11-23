@@ -23,7 +23,7 @@ def generate_launch_description():
             'enable_rgbd': 'true',
             'enable_sync': 'true',
             'enable_depth': 'true',
-            'colorizer.enable': 'true',            
+            'colorizer.enable': 'false',            
             'rgb_camera.profile': '640x480x30',
         }.items(),
     )
@@ -32,7 +32,8 @@ def generate_launch_description():
         package='roomba_ros2',
         namespace='roomba',
         executable='yolo_node',
-        name='yolo_node'
+        name='yolo_node',
+        output='screen'
     )
 
     return LaunchDescription([
