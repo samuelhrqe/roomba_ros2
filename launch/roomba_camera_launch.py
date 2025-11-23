@@ -23,8 +23,8 @@ def generate_launch_description():
             'enable_rgbd': 'true',
             'enable_sync': 'true',
             'enable_depth': 'true',
+            'colorizer.enable': 'true',            
             'rgb_camera.profile': '640x480x30',
-            'colorizer.enable': 'true',
         }.items(),
     )
 
