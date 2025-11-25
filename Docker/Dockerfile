@@ -108,6 +108,7 @@ RUN pip3 install --no-cache-dir \
 WORKDIR /opt/ros2_ws
 
 # Set config directory to YOLO
+RUN mkdir -p /tmp/Ultralytics && chmod 777 /tmp/Ultralytics
 ENV YOLO_CONFIG_DIR=/tmp/Ultralytics
 
 # Comando de execução equivalente ao último ros2 launch solicitado
