@@ -42,7 +42,7 @@ RUN set -e; \
       -DBUILD_GRAPHICAL_EXAMPLES=false \
       -DBUILD_PYTHON_BINDINGS=bool:true \
       -DPYTHON_EXECUTABLE=$(which python3) -L && \
-    make -j"$(nproc)" && \
+    make -j$(($(nproc)-1)) && \
     make install && \
     PYDIR=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["platlib"])') && \
     if ls /usr/local/OFF/*.so >/dev/null 2>&1; then \
@@ -106,6 +106,9 @@ RUN pip3 install --no-cache-dir \
       polars requests torchvision ultralytics-thop opencv-python "numpy==1.26.4"
 
 WORKDIR /opt/ros2_ws
+
+# Set config directory to YOLO
+ENV YOLO_CONFIG_DIR=/tmp/Ultralytics
 
 # Comando de execução equivalente ao último ros2 launch solicitado
 CMD ["bash", "-lc", "source /opt/ros/humble/setup.bash && source /opt/ros2_ws/install/setup.bash && ros2 launch roomba_ros2 roomba_camera_launch.py"]

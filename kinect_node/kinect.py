@@ -35,8 +35,8 @@ class KinectNode(Node):
 
         # CameraInfo (Calibration files)
         self.pkg_share = get_package_share_directory('roomba_ros2')
-        self.depth_info_url = 'file://' + self.pkg_share + '/config/kinect_calibration/calibration_depth.yaml'
-        self.rgb_info_url = 'file://' + self.pkg_share + '/config/kinect_calibration/calibration_rgb.yaml'
+        self.depth_info_url = 'file://' + self.pkg_share + '/kinect_node/config/kinect_calibration/calibration_depth.yaml'
+        self.rgb_info_url = 'file://' + self.pkg_share + '/kinect_node/config/kinect_calibration/calibration_rgb.yaml'
 
         self.depth_cinfo_mgr = CameraInfoManager(self, 'kinect', self.depth_info_url)
         self.rgb_cinfo_mgr = CameraInfoManager(self, 'kinect', self.rgb_info_url)

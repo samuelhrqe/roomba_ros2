@@ -8,6 +8,8 @@ import cv_bridge
 import tf2_ros
 from ultralytics import YOLO
 import numpy as np
+import os
+from ament_index_python.packages import get_package_share_directory
 
 class YoloNode(Node):
     def __init__(self):
@@ -15,8 +17,11 @@ class YoloNode(Node):
 
         self._stopping = 0
 
+        self.pkg_share = get_package_share_directory('roomba_ros2')
+        self.model_path = os.path.join(self.pkg_share, 'yolo_node', 'models', 'yolo11n.pt')
+
         # Initialize YOLO model
-        self.model = YOLO('yolo11n.pt')
+        self.model = YOLO(self.model_path)
         self.get_logger().info("YOLO model loaded successfully.")
 
         self.cv_bridge = cv_bridge.CvBridge()
