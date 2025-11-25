@@ -1,0 +1,14 @@
+# compose.yaml
+services:
+  roomba-realsense:
+    image: samuelhrqe/ros2_realsense_x86_64:humble
+    container_name: ros2_realsense_x86_64
+    privileged: true # it's already passing /dev/video*
+    network_mode: host
+    ipc: host
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+    device_cgroup_rules:
+      - "c 81:* rwm"
+      - "c 189:* rwm"
+    restart: unless-stopped
