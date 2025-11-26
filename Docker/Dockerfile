@@ -6,7 +6,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 SHELL ["/bin/bash", "-c"]
 
-# Base do sistema e dependências gerais
+# ---------------------------------------------------------------------
+# Base do sistema, universe e dependências gerais
+# ---------------------------------------------------------------------
 RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
         curl git wget cmake build-essential \
@@ -16,6 +18,7 @@ RUN apt-get update && apt-get upgrade -y && \
         python3-pip \
         locales \
         ca-certificates && \
+    add-apt-repository universe && \
     rm -rf /var/lib/apt/lists/*
 
 # Locale
@@ -23,26 +26,22 @@ RUN locale-gen en_US.UTF-8 && \
     update-locale LANG=en_US.UTF-8
 ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
-# Habilitar repositório universe e manter curl (como na sequência original)
-RUN add-apt-repository universe && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
-    rm -rf /var/lib/apt/lists/*
-
 # ---------------------------------------------------------------------
 # librealsense v2.54.2 com bindings Python
 # ---------------------------------------------------------------------
 RUN set -e; \
     cd /opt && \
-    git clone https://github.com/IntelRealSense/librealsense.git -b v2.54.2 && \
+    git clone --depth 1 https://github.com/IntelRealSense/librealsense.git -b v2.54.2 && \
     cd librealsense && \
     mkdir build && cd build && \
     cmake ../ \
+      -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_EXAMPLES=true \
       -DBUILD_GRAPHICAL_EXAMPLES=false \
+      -DBUILD_TOOLS=false \
       -DBUILD_PYTHON_BINDINGS=bool:true \
       -DPYTHON_EXECUTABLE=$(which python3) -L && \
-    make -j$(($(nproc)-1)) && \
+    make -j"$(($(nproc)-1))" && \
     make install && \
     PYDIR=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["platlib"])') && \
     if ls /usr/local/OFF/*.so >/dev/null 2>&1; then \
@@ -53,7 +52,7 @@ RUN set -e; \
       rs-enumerate-devices || true; \
     fi && \
     cd / && \
-    rm -rf /opt/librealsense/build
+    rm -rf /opt/librealsense
 
 # ---------------------------------------------------------------------
 # ROS 2 Humble (via ros-apt-source)
@@ -80,20 +79,21 @@ RUN set -e; \
     source /opt/ros/humble/setup.bash; \
     mkdir -p /opt/ros2_ws/src && \
     cd /opt/ros2_ws/src && \
-    git clone https://github.com/IntelRealSense/realsense-ros.git -b 4.54.1 && \
-    git clone https://github.com/samuelhrqe/roomba_ros2.git && \
+    git clone --depth 1 https://github.com/IntelRealSense/realsense-ros.git -b 4.54.1 && \
+    git clone --depth 1 https://github.com/samuelhrqe/roomba_ros2.git && \
     cd /opt/ros2_ws && \
-    apt-get update && apt-get upgrade -y && \
+    apt-get update && \
     rosdep init || echo "rosdep already initialized"; \
     for i in 1 2 3; do \
       rosdep update && break || (echo "rosdep update failed, trying again in 30 seconds..." && sleep 30); \
     done; \
-    rosdep install --from-paths src --rosdistro "$ROS_DISTRO" --ignore-src --skip-keys=librealsense2 --skip-keys=libfreenect -r -y && \
+    rosdep install --from-paths src --rosdistro "$ROS_DISTRO" \
+        --ignore-src --skip-keys=librealsense2 --skip-keys=libfreenect -r -y && \
     colcon build && \
     echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc && \
     echo "source /opt/ros2_ws/install/setup.bash" >> /root/.bashrc && \
     echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> /root/.bashrc && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* /opt/ros2_ws/build /opt/ros2_ws/log
 
 # ---------------------------------------------------------------------
 # PyTorch, Ultralytics e demais dependências Python
@@ -111,5 +111,4 @@ WORKDIR /opt/ros2_ws
 RUN mkdir -p /tmp/Ultralytics && chmod 777 /tmp/Ultralytics
 ENV YOLO_CONFIG_DIR=/tmp/Ultralytics
 
-# Comando de execução equivalente ao último ros2 launch solicitado
 CMD ["bash", "-lc", "source /opt/ros/humble/setup.bash && source /opt/ros2_ws/install/setup.bash && ros2 launch roomba_ros2 roomba_camera_launch.py"]
