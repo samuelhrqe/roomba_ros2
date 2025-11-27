@@ -38,5 +38,5 @@ def generate_launch_description():
 
     return LaunchDescription([
         rs_launch,
-        yolo_node
+        #yolo_node
     ])
